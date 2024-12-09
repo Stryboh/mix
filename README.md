@@ -1,5 +1,5 @@
-#python -m venv venv
+# python -m venv venv
 
-#source venv/bin/activate
+# source venv/bin/activate
 
-#python main.py
+# python main.py
