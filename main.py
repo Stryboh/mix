@@ -2,6 +2,7 @@ import credentials
 import asyncio
 import logging
 import sys
+import sqlite3
 
 from aiogram import Bot, Dispatcher, html
 from aiogram.client.default import DefaultBotProperties
@@ -13,17 +14,16 @@ TOKEN = credentials.token()
 
 dp = Dispatcher()
 
-def get_credentials_by_code(code: str, file_path: str = "data.txt") -> tuple[str, str] | None:
-    with open(file_path, "r", encoding="utf-8") as file:
-        lines = file.readlines()
-    lines = [line.strip() for line in lines if line.strip()]
-    for i in range(len(lines)):
-        if lines[i] == code:
-            if i + 2 < len(lines):
-                login = lines[i + 1]
-                password = lines[i + 2]
-                return login, password
-    return None
+def get_credentials_by_code(code: str, file_path: str = "credentials.db") -> tuple[str, str] | None:
+    connection = sqlite3.connect(file_path)
+    cursor = connection.cursor()
+    data = cursor.execute("SELECT login, password FROM Users WHERE code = ?", (code,)).fetchone()
+    connection.close()
+    if data:
+        login, password = data
+        return login, password
+    else:
+        return None
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
