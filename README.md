@@ -1,1 +1,1 @@
-# mix
+# sudo pacman -Sy sshpass
