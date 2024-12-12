@@ -11,7 +11,7 @@ path to database
 output:
 list of all tables in database, None if no tables exist
 
-
+# 
 
 get_table_columns(file_path : str, table_name : str) -> tuple[list, list] | None
 
@@ -21,7 +21,7 @@ path to database, title of table
 output:
 list of titles of columns in the table, list of data types of columns in the table
 
-
+# 
 
 get_table_data(file_path : str, table_name : str) -> list | None
 
@@ -31,7 +31,7 @@ path to database, title of table
 output:
 list of lists, storing all the data in the table
 
-
+# 
 
 get_structure(file_path : str) -> str
 
