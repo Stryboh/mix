@@ -41,3 +41,18 @@ def get_structure(file_path : str) -> str:
             structure += "\n        " + columns[i] + " : " + types[i]
         structure += "\n"
     return structure
+
+
+print(get_database_tables("your_database.db"))
+print()
+print()
+print()
+print(get_table_columns("your_database.db", "your_table"))
+print()
+print()
+print()
+print(get_table_data("your_database.db", "your_table"))
+print()
+print()
+print()
+print(get_structure("your_database.db"))
