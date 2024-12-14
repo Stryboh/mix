@@ -5,9 +5,9 @@ def intersection(list1 : list, list2 : list) -> list:
     result = []
     for item in list1:
         try:
-            list2.index(item)
+            list2.remove(item)
             result.append(item)
-        except None:
+        except:
             pass
     return result
 
@@ -21,12 +21,20 @@ def get_database_tables(file_path: str) -> list | None:
     return tables
 
 
-def get_table_columns(file_path : str, table_name : str) -> list | None:
+def get_table_columns(file_path : str, table_title : str) -> list | None:
     connection = sqlite3.connect(file_path)
     cursor = connection.cursor()
-    data = cursor.execute(f"SELECT name, type FROM pragma_table_info('{table_name}')").fetchall()
+    data = cursor.execute(f"SELECT name, type FROM pragma_table_info('{table_title}')").fetchall()
     connection.close()
     return data
+
+
+def get_data_type(file_path : str, table_name : str, column_title) -> str | None:
+    connection = sqlite3.connect(file_path)
+    cursor = connection.cursor()
+    type = cursor.execute(f"SELECT type FROM pragma_table_info('{table_name}') WHERE name='{column_title}'").fetchall()[0][0]
+    connection.close()
+    return type
 
 
 def check_connectivity(file_1_path: str, table_1_name: str, column_1_name: str, file_2_path: str, table_2_name: str, column_2_name: str) -> bool:
@@ -54,13 +62,19 @@ def transfer_data(old_file_path: str, old_table_name: str, old_column_name: str,
         cursor2 = connection2.cursor()
         try:
             new_column_data = cursor1.execute(f"SELECT {old_column_name} FROM {old_table_name}").fetchall()
+            if get_data_type(old_file_path, old_table_name, old_column_name) == 'TEXT':
+                for i in range(len(new_column_data)):
+                    new_column_data[i] = f"\'{str(new_column_data[i][0])}\'"
+            else:
+                for i in range(len(new_column_data)):
+                    new_column_data[i] = new_column_data[i][0]
             rows = len(cursor2.execute(f"SELECT {new_column_name} FROM {new_table_name}").fetchall())
             for i in range(len(new_column_data) - rows):
                 cursor2.execute(f"INSERT INTO {new_table_name} ({new_column_name}) VALUES (null)")
             action = f"UPDATE {new_table_name} SET {new_column_name}=CASE "
             for i in range(len(new_column_data)):
-                action += f"WHEN rowid={i+1} THEN {new_column_data[i][0]} "
-            action += f" END"
+                action += f"WHEN rowid={i+1} THEN {new_column_data[i]} "
+            action += f"END"
             cursor2.execute(action)
 
             connection2.commit()
@@ -96,6 +110,17 @@ def auto_transfer_data(old_file_path : str, new_file_path : str) -> list:
     for column in columns:
         table_name, column_data = column
         column_name, column_type = column_data
-        if check_connectivity(old_file_path, table_name, column_name, new_file_path, table_name, column_name):
-            columns_copied.append(transfer_data(old_file_path, table_name, column_name, new_file_path, table_name, column_name))
+        columns_copied.append(transfer_data(old_file_path, table_name, column_name, new_file_path, table_name, column_name))
     return columns_copied
+
+
+print(check_connectivity("db1.db", "table1", "col1", "db2.db", "table1", "col1"))
+print(check_connectivity("db1.db", "table1", "col1", "db2.db", "table1", "col2"))
+print()
+print()
+print()
+print(transfer_data("db1.db", "table1", "col1", "db2.db", "table1", "col1"))
+print()
+print()
+print()
+print(auto_transfer_data("db1.db", "db2.db"))
