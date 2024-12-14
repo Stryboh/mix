@@ -93,10 +93,9 @@ def auto_transfer_data(old_file_path : str, new_file_path : str) -> list:
 
     columns = intersection(old_columns, new_columns)
     columns_copied = []
-    print(columns)
     for column in columns:
-        print(column)
         table_name, column_data = column
         column_name, column_type = column_data
-        columns_copied.append(transfer_data(old_file_path, table_name, column_name, new_file_path, table_name, column_name))
+        if check_connectivity(old_file_path, table_name, column_name, new_file_path, table_name, column_name):
+            columns_copied.append(transfer_data(old_file_path, table_name, column_name, new_file_path, table_name, column_name))
     return columns_copied
