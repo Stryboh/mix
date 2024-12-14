@@ -1,11 +1,21 @@
 import sqlite3
 
 
+def check_access(login : str, database_id : int) -> bool:
+    connection = sqlite3.connect("credentials.db")
+    cursor = connection.cursor()
+    user = cursor.execute(f"SELECT login FROM Users LEFT JOIN Databases on Users.code = Databases.user_id WHERE Databases.id = {database_id}").fetchall()[0][0]
+    connection.close()
+    if user == login:
+        return True
+    else:
+        return False
+
+
 def get_database_tables(file_path: str) -> list | None:
     connection = sqlite3.connect(file_path)
     cursor = connection.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    tables = cursor.fetchall()
+    tables = cursor.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
     connection.close()
     return tables
 
@@ -43,6 +53,10 @@ def get_structure(file_path : str) -> str:
     return structure
 
 
+print(check_access("egorskab", 1))
+print()
+print()
+print()
 print(get_database_tables("your_database.db"))
 print()
 print()
