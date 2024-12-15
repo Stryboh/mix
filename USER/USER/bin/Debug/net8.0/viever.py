@@ -92,7 +92,7 @@ def main():
             print(result)
     elif args.function == 'get_available_databases':
         if len(args.params) != 1:
-            print("Usage: python viewer.py get_all_databases <login>")
+            print("Usage: python viewer.py get_available_databases <login>")
         else:
             login = args.params[0]
             result = get_available_databases(login)
