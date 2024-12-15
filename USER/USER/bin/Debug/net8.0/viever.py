@@ -1,13 +1,13 @@
 import sqlite3
 import argparse
 
-def check_login(login :str, password : str) -> bool:
+def check_login(login :str, password : str) -> str |bool:
     connection = sqlite3.connect("credentials.db")
     cursor = connection.cursor()
-    user = cursor.execute(f"SELECT login FROM Users WHERE login='{login}' AND password='{password}'").fetchall()
+    role = cursor.execute(f"SELECT role FROM Users WHERE login='{login}' AND password='{password}'").fetchall()
     connection.close()
-    if user:
-        return True
+    if role:
+        return str(role)
     else:
         return False
 
