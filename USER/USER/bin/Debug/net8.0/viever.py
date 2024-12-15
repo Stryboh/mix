@@ -141,5 +141,6 @@ def main():
             result = get_structure(file_path)
             print(result)
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
+print(check_login('stryboh', '5005'))
