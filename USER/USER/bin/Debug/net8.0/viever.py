@@ -6,6 +6,7 @@ def check_login(login :str, password : str) -> str |bool:
     cursor = connection.cursor()
     role = cursor.execute(f"SELECT role FROM Users WHERE login='{login}' AND password='{password}'").fetchall()
     connection.close()
+    print(role[0][0])
     if role:
         return str(role)
     else:
@@ -128,5 +129,7 @@ def main():
             result = get_structure(file_path)
             print(result)
 
-if __name__ == '__main__':
-    main()
+check_login('egorskab', 'testpass')
+
+# if __name__ == '__main__':
+#     main()
