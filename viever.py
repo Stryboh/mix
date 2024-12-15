@@ -76,7 +76,7 @@ def main():
 
     if args.function == 'check_login':
         if len(args.params) != 2:
-            print("Usage: python viewer.py check_access <login> <database_id>")
+            print("Usage: python viewer.py check_login <login> <password>")
         else:
             login = args.params[0]
             password = args.params[1]
@@ -85,6 +85,14 @@ def main():
     elif args.function == 'check_access':
         if len(args.params) != 2:
             print("Usage: python viewer.py check_access <login> <database_id>")
+        else:
+            login = args.params[0]
+            database_id = int(args.params[1])
+            result = check_access(login, database_id)
+            print(result)
+    elif args.function == 'get_all_databases':
+        if len(args.params) != 0:
+            print("Usage: python viewer.py get_all_databases")
         else:
             login = args.params[0]
             database_id = int(args.params[1])
