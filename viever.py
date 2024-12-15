@@ -63,7 +63,7 @@ def get_structure(file_path: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Database Viewer")
-    parser.add_argument('function', choices=['check_access', 'get_database_tables', 'get_table_columns', 'get_table_data', 'get_structure'], help='Function to execute')
+    parser.add_argument('function', choices=['check_login', 'check_access', 'get_database_tables', 'get_table_columns', 'get_table_data', 'get_structure'], help='Function to execute')
     parser.add_argument('params', nargs='*', help='Parameters for the function')
     args = parser.parse_args()
 
