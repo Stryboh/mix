@@ -143,4 +143,4 @@ def main():
 
 # if __name__ == '__main__':
 #     main()
-print(check_login('stryboh', '5005'))
+print(check_login('stryboh', '505'))
