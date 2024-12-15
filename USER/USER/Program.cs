@@ -162,7 +162,7 @@ class DatabaseSelectionWindow : Window
         SetDefaultSize(400, 300);
         SetPosition(WindowPosition.Center);
 
-        string command = $"venv/bin/python viever.py get_avalable_databases {Globals.LOGIN}";
+        string command = $"venv/bin/python viever.py get_available_databases {Globals.LOGIN}";
         string input = RunCommandWithBash(command);
         
         string[] result = ParseStrings(input);
