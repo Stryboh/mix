@@ -6,7 +6,7 @@ using Gtk;
 
 public static class Globals {
     public static string LOGIN;
-    public static string PASSWORD;
+    public static string CURRENT_DATABASE;
 }
 
 class Program
@@ -182,6 +182,8 @@ class DatabaseSelectionWindow : Window
             button.Clicked += (sender, e) =>
             {
                 var mainAppWindow = new MainAppWindow(db);
+                Console.WriteLine("Selected:", db);
+
                 mainAppWindow.ShowAll();
                 Destroy();
             };
@@ -196,6 +198,41 @@ class DatabaseSelectionWindow : Window
 // Главный экран приложения
 class MainAppWindow : Window
 {
+    public string RunCommandWithBash(string command)
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{command}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Environment.CurrentDirectory // Текущая директория
+                }
+            };
+
+            process.Start();
+
+            // Читаем вывод
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+
+            process.WaitForExit();
+
+            // Если есть ошибка, добавляем её в вывод
+            Console.WriteLine(output);
+            return string.IsNullOrWhiteSpace(error) ? output : $"{output}\nERROR: {error}";
+        }
+        catch (Exception ex)
+        {
+            return $"Exception occurred: {ex.Message}";
+        }
+    }
     public MainAppWindow(string databaseName) : base($"Main App - {databaseName}")
     {
         SetDefaultSize(600, 400);
@@ -212,10 +249,57 @@ class MainAppWindow : Window
         var commandEntry = new Entry { PlaceholderText = "Enter command..." };
         var executeButton = new Button("Execute");
 
+        //string scpCommand = $"venv/bin/python viever.py check_login {usernameEntry.Text} {passwordEntry.Text}";
+        
         executeButton.Clicked += (sender, e) =>
         {
             var command = commandEntry.Text;
-            textView.Buffer.Text += $"\n> {command}\nCommand executed.";
+            if (command == "help") {
+                textView.Buffer.Text += $"\n> {command}\nCommand executed.";
+                textView.Buffer.Text += "\n\tget_database_table";
+                textView.Buffer.Text += "\n\tget_table_columns table1";
+                textView.Buffer.Text += "\n\tget_table_data table1";
+                textView.Buffer.Text += "\n\tget_structure";
+            }
+            else
+            {
+                Console.WriteLine(command);
+                if (command == "get_structure")
+                {
+                    Console.WriteLine($"Command is {command}");
+                    string cmd = $"venv/bin/python viever.py get_structure {databaseName}.db";
+                    string output = RunCommandWithBash(cmd);
+                    Console.WriteLine("Output is:\"" + output + "\"");
+                    textView.Buffer.Text += output + "\n";
+                }
+                if (command == "get_database_tables")
+                {
+                    string cmd = $"venv/bin/python viever.py get_database_tables {databaseName}.db";
+                    string output = RunCommandWithBash(cmd);
+                    //Console.WriteLine("Output is:\"" + output + "\"");
+                    textView.Buffer.Text += output + "\n";
+                }
+
+                if (command.Contains("get_table_columns"))
+                {
+                    string[] arguments = command.Split(' ');
+                    
+                    string cmd = $"venv/bin/python viever.py get_table_columns {databaseName}.db {arguments[1]}";
+                    string output = RunCommandWithBash(cmd);
+                    //Console.WriteLine("Output is:\"" + output + "\"");
+                    textView.Buffer.Text += output + "\n";
+                }
+                if (command.Contains("get_table_data"))
+                {
+                    string[] arguments = command.Split(' ');
+                    string cmd = $"venv/bin/python viever.py get_table_data {databaseName}.db {arguments[1]}";
+                    string output = RunCommandWithBash(cmd);
+                    //Console.WriteLine("Output is:\"" + output + "\"");
+                    textView.Buffer.Text += output + "\n";
+                }
+            }
+
+            textView.Buffer.Text += $"\n>"; 
             commandEntry.Text = string.Empty;
         };
 
