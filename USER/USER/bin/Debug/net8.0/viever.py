@@ -6,9 +6,8 @@ def check_login(login :str, password : str) -> str |bool:
     cursor = connection.cursor()
     role = cursor.execute(f"SELECT role FROM Users WHERE login='{login}' AND password='{password}'").fetchall()
     connection.close()
-    print(role[0][0])
     if role:
-        return str(role)
+        return str(role[0][0])
     else:
         return False
 
