@@ -1,7 +1,18 @@
+
 import sqlite3
+import argparse
 
+def check_login(login :str, password : str) -> bool:
+    connection = sqlite3.connect("credentials.db")
+    cursor = connection.cursor()
+    user = cursor.execute(f"SELECT login FROM Users WHERE login='{login}' AND password='{password}'").fetchall()
+    connection.close()
+    if user:
+        return "OK"
+    else:
+        return "NOT_OK"
 
-def check_access(login : str, database_id : int) -> bool:
+def check_access(login: str, database_id: int) -> bool:
     connection = sqlite3.connect("credentials.db")
     cursor = connection.cursor()
     user = cursor.execute(f"SELECT login FROM Users LEFT JOIN Databases on Users.code = Databases.user_id WHERE Databases.id = {database_id}").fetchall()[0][0]
@@ -11,7 +22,6 @@ def check_access(login : str, database_id : int) -> bool:
     else:
         return False
 
-
 def get_database_tables(file_path: str) -> list | None:
     connection = sqlite3.connect(file_path)
     cursor = connection.cursor()
@@ -19,7 +29,7 @@ def get_database_tables(file_path: str) -> list | None:
     connection.close()
     return tables
 
-def get_table_columns(file_path : str, table_name : str) -> tuple[list, list] | None:
+def get_table_columns(file_path: str, table_name: str) -> tuple[list, list] | None:
     connection = sqlite3.connect(file_path)
     cursor = connection.cursor()
     data = cursor.execute(f"SELECT name, type FROM pragma_table_info('{table_name}')").fetchall()
@@ -31,18 +41,18 @@ def get_table_columns(file_path : str, table_name : str) -> tuple[list, list] | 
         types.append(column[1])
     return columns, types
 
-def get_table_data(file_path : str, table_name : str) -> list | None:
+def get_table_data(file_path: str, table_name: str) -> list | None:
     connection = sqlite3.connect(file_path)
     cursor = connection.cursor()
     data = cursor.execute("SELECT * FROM " + str(table_name)).fetchall()
     connection.close()
     return data
 
-def get_structure(file_path : str) -> str:
+def get_structure(file_path: str) -> str:
     structure = file_path.split('/')[-1] + '\n'
     tables = get_database_tables(file_path)
     for table in tables:
-        if str(table)[2: -3] == "sqlite_sequence" or str(table)[2: -3] == "sqlite_master":
+        if str(table)[2:-3] == "sqlite_sequence" or str(table)[2:-3] == "sqlite_master":
             continue
         table = str(table)[2:-3]
         structure += "\n    " + str(table)
@@ -52,21 +62,60 @@ def get_structure(file_path : str) -> str:
         structure += "\n"
     return structure
 
+def main():
+    parser = argparse.ArgumentParser(description="Database Viewer")
+    parser.add_argument('function', choices=['check_login', 'check_access', 'get_database_tables', 'get_table_columns', 'get_table_data', 'get_structure'], help='Function to execute')
+    parser.add_argument('params', nargs='*', help='Parameters for the function')
+    args = parser.parse_args()
 
-print(check_access("egorskab", 1))
-print()
-print()
-print()
-print(get_database_tables("your_database.db"))
-print()
-print()
-print()
-print(get_table_columns("your_database.db", "your_table"))
-print()
-print()
-print()
-print(get_table_data("your_database.db", "your_table"))
-print()
-print()
-print()
-print(get_structure("your_database.db"))
+    if args.function == 'check_login':
+        if len(args.params) != 2:
+            return("Usage: python viewer.py check_access <login> <database_id>")
+        else:
+            login = args.params[0]
+            password = args.params[1]
+            result = check_login(login, password)
+            print(result)
+            return(result)
+    elif args.function == 'check_access':
+        if len(args.params) != 2:
+            return("Usage: python viewer.py check_access <login> <database_id>")
+        else:
+            login = args.params[0]
+            database_id = int(args.params[1])
+            result = check_access(login, database_id)
+            return(result)
+    elif args.function == 'get_database_tables':
+        if len(args.params) != 1:
+            return("Usage: python viewer.py get_database_tables <file_path>")
+        else:
+            file_path = args.params[0]
+            result = get_database_tables(file_path)
+            return(result)
+    elif args.function == 'get_table_columns':
+        if len(args.params) != 2:
+            return("Usage: python viewer.py get_table_columns <file_path> <table_name>")
+        else:
+            file_path = args.params[0]
+            table_name = args.params[1]
+            result = get_table_columns(file_path, table_name)
+            return(result)
+    elif args.function == 'get_table_data':
+        if len(args.params) != 2:
+            return("Usage: python viewer.py get_table_data <file_path> <table_name>")
+        else:
+            file_path = args.params[0]
+            table_name = args.params[1]
+            result = get_table_data(file_path, table_name)
+            return(result)
+    elif args.function == 'get_structure':
+        if len(args.params) != 1:
+            return("Usage: python viewer.py get_structure <file_path>")
+        else:
+            file_path = args.params[0]
+            result = get_structure(file_path)
+            return(result)
+
+if __name__ == '__main__':
+    main()
+
