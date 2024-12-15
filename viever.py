@@ -128,7 +128,5 @@ def main():
             result = get_structure(file_path)
             print(result)
 
-print(get_available_databases("wudado"))
-
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
