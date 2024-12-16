@@ -436,14 +436,14 @@ class MainAppWindow : Window
             textView.Buffer.Text += $"\n>";
             commandEntry.Text = string.Empty;
         };
-        var logoutButton = new Button("Logout");
-        logoutButton.Clicked += (sender, e) =>
+        var backButton = new Button("Back");
+        backButton.Clicked += (sender, e) =>
         {
-            var loginAppWindow = new LoginWindow();
-            loginAppWindow.ShowAll();
+            var DatabaseSelectionAppWindow = new DatabaseSelectionWindow();
+            DatabaseSelectionAppWindow.ShowAll();
             Destroy();
         };
-        vbox.PackStart(logoutButton , false, false, 5);
+        vbox.PackStart(backButton , false, false, 5);
         Add(vbox);
         ShowAll();
         
