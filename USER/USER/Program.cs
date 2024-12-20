@@ -222,8 +222,8 @@ class MainAppWindow : Window
                     textView.Buffer.Text = "";
                     textView.Buffer.Text += $"\n> {command}\nCommand executed.";
                     textView.Buffer.Text += "\n\tget_database_tables";
-                    textView.Buffer.Text += "\n\tget_table_columns table1";
-                    textView.Buffer.Text += "\n\tget_table_data table1";
+                    textView.Buffer.Text += "\n\tget_table_columns <table_name>";
+                    textView.Buffer.Text += "\n\tget_table_data <table_name>";
                     textView.Buffer.Text += "\n\tget_structure";
                 }
                 else
@@ -272,11 +272,10 @@ class MainAppWindow : Window
                     textView.Buffer.Text = "";
                     textView.Buffer.Text += $"\n> {command}\nCommand executed.";
                     textView.Buffer.Text += "\n\tget_database_tables";
-                    textView.Buffer.Text += "\n\tget_table_columns table1";
-                    textView.Buffer.Text += "\n\tget_table_data table1";
+                    textView.Buffer.Text += "\n\tget_table_columns <table_name>";
+                    textView.Buffer.Text += "\n\tget_table_data <table_name>";
                     textView.Buffer.Text += "\n\tget_structure";
-                    textView.Buffer.Text += "\n\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
-                    textView.Buffer.Text += "\n\tadd_data_to_table add_data_to_table <table_name> <columns> <data>";
+                    textView.Buffer.Text += "\n\tadd_data_to_table <table_name> <columns> <data>";
                     textView.Buffer.Text += "\n\terase_data_from_table <table_name> [condition]";
                     textView.Buffer.Text += "\n\tmodify_data_in_table <table_name> <column> <value> [condition]";
                     textView.Buffer.Text += "\n\tset_data_none_in_table <table_name> <column> [condition]";
@@ -373,10 +372,9 @@ class MainAppWindow : Window
                     textView.Buffer.Text = "";
                     textView.Buffer.Text += $"\n> {command}\nCommand executed.";
                     textView.Buffer.Text += "\n\tget_database_tables";
-                    textView.Buffer.Text += "\n\tget_table_columns table1";
-                    textView.Buffer.Text += "\n\tget_table_data table1";
+                    textView.Buffer.Text += "\n\tget_table_columns <table_name>";
+                    textView.Buffer.Text += "\n\tget_table_data <table_name>";
                     textView.Buffer.Text += "\n\tget_structure";
-                    textView.Buffer.Text += "\n\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
                     textView.Buffer.Text += "\n\tcheck_connectivity <file_1_path> <table_1_name> <column_1_name> <file_2_path> <table_2_name> <column_2_name>";
                     textView.Buffer.Text += "\n\ttransfer_data <old_file_path> <old_table_name> <old_column_name> <new_file_path> <new_table_name> <new_column_name>";
                     textView.Buffer.Text += "\n\tauto_transfer_data <old_file_path> <new_file_path>";
@@ -473,18 +471,6 @@ class MainAppWindow : Window
         Add(vbox);
         ShowAll();
         
-       /* 
-        var backButton = new Button("Logout");
-        backButton.Clicked += (sender, e) =>
-        {
-            var loginAppWindow = new LoginWindow();
-            backButton.ShowAll();
-            Destroy();
-        };
-        vbox.PackStart(backButton , false, false, 5);
-        Add(vbox);
-        ShowAll();
-        */
         
         var hbox = new HBox();
         hbox.PackStart(commandEntry, true, true, 5);
