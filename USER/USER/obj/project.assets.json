@@ -194,19 +194,20 @@
     ]
   },
   "packageFolders": {
-    "/home/egorskab/.nuget/packages/": {}
+    "/home/stryboh/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/egorskab/RiderProjects/mix/USER/USER/USER.csproj",
+      "projectUniqueName": "/home/stryboh/Projects/Proga/USER/USER/USER.csproj",
       "projectName": "USER",
-      "projectPath": "/home/egorskab/RiderProjects/mix/USER/USER/USER.csproj",
-      "packagesPath": "/home/egorskab/.nuget/packages/",
-      "outputPath": "/home/egorskab/RiderProjects/mix/USER/USER/obj/",
+      "projectPath": "/home/stryboh/Projects/Proga/USER/USER/USER.csproj",
+      "packagesPath": "/home/stryboh/.nuget/packages/",
+      "outputPath": "/home/stryboh/Projects/Proga/USER/USER/obj/",
       "projectStyle": "PackageReference",
+      "UsingMicrosoftNETSdk": false,
       "configFilePaths": [
-        "/home/egorskab/.nuget/NuGet/NuGet.Config"
+        "/home/stryboh/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"

@@ -2,41 +2,41 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using Gtk;
 
 public static class Globals
 {
     public static string LOGIN;
     public static string ROLE;
-    public static string RunCommandWithBash(string command)
-        {
-            try
-            {
-                var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "/bin/bash",
-                        Arguments = $"-c \"{command}\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        WorkingDirectory = Environment.CurrentDirectory 
-                    }
-                };
+    public static string SERVER_HOST = "127.0.0.1"; // Замените на адрес сервера
+    public static int SERVER_PORT = 8888;
     
-                process.Start();
-                string output = process.StandardOutput.ReadToEnd();
-                string error = process.StandardError.ReadToEnd();
-                process.WaitForExit();
-                return string.IsNullOrWhiteSpace(error) ? output : $"{output}\nERROR: {error}";
-            }
-            catch (Exception ex)
+    public static string RunCommandWithSocket(string command)
+    {
+        try
+        {
+            using (var client = new UdpClient())
             {
-                return $"Exception occurred: {ex.Message}";
+                var serverEndpoint = new IPEndPoint(IPAddress.Parse(SERVER_HOST), SERVER_PORT);
+                byte[] sendBuffer = Encoding.UTF8.GetBytes(command);
+
+                // Отправка команды на сервер
+                client.Send(sendBuffer, sendBuffer.Length, serverEndpoint);
+
+                // Получение ответа от сервера
+                var serverResponse = client.Receive(ref serverEndpoint);
+                string response = Encoding.UTF8.GetString(serverResponse);
+                return response;
             }
         }
+        catch (Exception ex)
+        {
+            return $"Exception occurred: {ex.Message}";
+        }
+    }
 }
 
 class Program
@@ -59,15 +59,39 @@ class LoginWindow : Window
 
         var vbox = new VBox();
         var usernameEntry = new Entry { PlaceholderText = "Username" };
+        var socketIpEntry = new Entry { PlaceholderText = "Socket Ip" };
+        var socketPortEntry = new Entry { PlaceholderText = "Socket Port" };
         var passwordEntry = new Entry { PlaceholderText = "Password", Visibility = false };
         var loginButton = new Button("Login");
-
-        loginButton.Clicked += (sender, e) =>
+        string configFilePath = "config_socket_srv.txt";
+        
+        if (File.Exists(configFilePath))
         {
+            string[] lines = File.ReadAllLines(configFilePath);
+            Globals.SERVER_HOST = lines[0];
+            Globals.SERVER_PORT = int.Parse(lines[1]);
+            socketIpEntry.Text = Globals.SERVER_HOST;
+            socketPortEntry.Text = Globals.SERVER_PORT.ToString();
+        }
+        else
+        {
+            Globals.SERVER_HOST = "127.0.0.1";
+            Globals.SERVER_PORT = 8888;
+            socketIpEntry.Text = Globals.SERVER_HOST;
+            socketPortEntry.Text = Globals.SERVER_PORT.ToString();
+
+            // Значения по умолчанию, если файл отсутствует
+        }        loginButton.Clicked += (sender, e) =>
+        {
+            
+            Globals.SERVER_HOST = socketIpEntry.Text ;
+            Globals.SERVER_PORT = int.Parse(socketPortEntry.Text);
+            File.WriteAllText(configFilePath, Globals.SERVER_HOST + "\n" + Globals.SERVER_PORT);
+
             string command = $"venv/bin/python viever.py check_login {usernameEntry.Text} {passwordEntry.Text}";
             try
             {
-                if (Globals.RunCommandWithBash(command).Contains("client"))
+                if (Globals.RunCommandWithSocket(command).Contains("client"))
                 {
                     Globals.ROLE = "client";
                     Console.WriteLine("Hello, client");
@@ -77,7 +101,7 @@ class LoginWindow : Window
                     Destroy();
                 }
 
-                else if (Globals.RunCommandWithBash(command).Contains("moderator"))
+                else if (Globals.RunCommandWithSocket(command).Contains("moderator"))
                 {
                     Globals.ROLE = "moderator";
                     Console.WriteLine("Hello, moderator");
@@ -87,7 +111,7 @@ class LoginWindow : Window
                     Destroy();
                 }
 
-                else if (Globals.RunCommandWithBash(command).Contains("devops"))
+                else if (Globals.RunCommandWithSocket(command).Contains("devops"))
                 {
                     Globals.ROLE = "devops";
                     Console.WriteLine("Hello, devops");
@@ -98,7 +122,7 @@ class LoginWindow : Window
                     
                 }
 
-                else if (Globals.RunCommandWithBash(command).Contains("developer"))
+                else if (Globals.RunCommandWithSocket(command).Contains("developer"))
                 {
                     Globals.ROLE = "developer";
                     Console.WriteLine("Hello, developer");
@@ -121,11 +145,12 @@ class LoginWindow : Window
         vbox.PackStart(passwordEntry, false, false, 5);
         vbox.PackStart(loginButton, false, false, 5);
 
+        vbox.PackStart(socketIpEntry, false, false, 5);
+        vbox.PackStart(socketPortEntry, false, false, 5);
         Add(vbox);
         ShowAll();
     }
 }
-
 
 class DatabaseSelectionWindow : Window
 {
@@ -145,7 +170,7 @@ class DatabaseSelectionWindow : Window
         SetDefaultSize(400, 300);
         SetPosition(WindowPosition.Center);
         string command = $"venv/bin/python viever.py get_available_databases {Globals.LOGIN}";
-        string input = Globals.RunCommandWithBash(command);
+        string input = Globals.RunCommandWithSocket(command);
         string[] result = ParseStrings(input);
 
         var vbox = new VBox();
@@ -196,7 +221,7 @@ class MainAppWindow : Window
                 {
                     textView.Buffer.Text = "";
                     textView.Buffer.Text += $"\n> {command}\nCommand executed.";
-                    textView.Buffer.Text += "\n\tget_database_table";
+                    textView.Buffer.Text += "\n\tget_database_tables";
                     textView.Buffer.Text += "\n\tget_table_columns table1";
                     textView.Buffer.Text += "\n\tget_table_data table1";
                     textView.Buffer.Text += "\n\tget_structure";
@@ -206,7 +231,7 @@ class MainAppWindow : Window
                     if (command == "get_structure")
                     {
                         string cmd = $"venv/bin/python viever.py get_structure {databaseName}.db";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -214,7 +239,7 @@ class MainAppWindow : Window
                     if (command == "get_database_tables")
                     {
                         string cmd = $"venv/bin/python viever.py get_database_tables {databaseName}.db";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -223,7 +248,7 @@ class MainAppWindow : Window
                     {
                         string[] arguments = command.Split(' ');
                         string cmd = $"venv/bin/python viever.py get_table_columns {databaseName}.db {arguments[1]}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -232,7 +257,7 @@ class MainAppWindow : Window
                     {
                         string[] arguments = command.Split(' ');
                         string cmd = $"venv/bin/python viever.py get_table_data {databaseName}.db {arguments[1]}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -246,7 +271,7 @@ class MainAppWindow : Window
                 {
                     textView.Buffer.Text = "";
                     textView.Buffer.Text += $"\n> {command}\nCommand executed.";
-                    textView.Buffer.Text += "\n\tget_database_table";
+                    textView.Buffer.Text += "\n\tget_database_tables";
                     textView.Buffer.Text += "\n\tget_table_columns table1";
                     textView.Buffer.Text += "\n\tget_table_data table1";
                     textView.Buffer.Text += "\n\tget_structure";
@@ -261,7 +286,7 @@ class MainAppWindow : Window
                     if (command == "get_structure")
                     {
                         string cmd = $"venv/bin/python viever.py get_structure {databaseName}.db";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -269,7 +294,7 @@ class MainAppWindow : Window
                     if (command == "get_database_tables")
                     {
                         string cmd = $"venv/bin/python viever.py get_database_tables {databaseName}.db";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -278,7 +303,7 @@ class MainAppWindow : Window
                     {
                         string[] arguments = command.Split(' ');
                         string cmd = $"venv/bin/python viever.py get_table_columns {databaseName}.db {arguments[1]}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -287,7 +312,7 @@ class MainAppWindow : Window
                     {
                         string[] arguments = command.Split(' ');
                         string cmd = $"venv/bin/python viever.py get_table_data {databaseName}.db {arguments[1]}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -301,7 +326,7 @@ class MainAppWindow : Window
                             ar += arguments[i] + " ";
                         
                         string cmd = $"venv/bin/python filler.py add_data_to_table {databaseName}.db {ar}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -312,7 +337,7 @@ class MainAppWindow : Window
                          for (int i = 2; i < arguments.Length; ++i)
                              ar += arguments[i] + " ";
                          string cmd = $"venv/bin/python filler.py erase_data_from_table {databaseName}.db {ar}";
-                         string output = Globals.RunCommandWithBash(cmd);
+                         string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                          textView.Buffer.Text += output + "\n";                       
                     }
@@ -323,7 +348,7 @@ class MainAppWindow : Window
                         for (int i = 2; i < arguments.Length; ++i)
                             ar += arguments[i] + " ";
                         string cmd = $"venv/bin/python filler.py modify_data_in_table {databaseName}.db {ar}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";                       
                     }
@@ -334,7 +359,7 @@ class MainAppWindow : Window
                         for (int i = 2; i < arguments.Length; ++i)
                             ar += arguments[i] + " ";
                         string cmd = $"venv/bin/python filler.py set_data_none_in_table {databaseName}.db {ar}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";                       
                     }
@@ -347,7 +372,7 @@ class MainAppWindow : Window
                 {
                     textView.Buffer.Text = "";
                     textView.Buffer.Text += $"\n> {command}\nCommand executed.";
-                    textView.Buffer.Text += "\n\tget_database_table";
+                    textView.Buffer.Text += "\n\tget_database_tables";
                     textView.Buffer.Text += "\n\tget_table_columns table1";
                     textView.Buffer.Text += "\n\tget_table_data table1";
                     textView.Buffer.Text += "\n\tget_structure";
@@ -361,7 +386,7 @@ class MainAppWindow : Window
                     if (command == "get_structure")
                     {
                         string cmd = $"venv/bin/python viever.py get_structure {databaseName}.db";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -369,7 +394,7 @@ class MainAppWindow : Window
                     if (command == "get_database_tables")
                     {
                         string cmd = $"venv/bin/python viever.py get_database_tables {databaseName}.db";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -378,7 +403,7 @@ class MainAppWindow : Window
                     {
                         string[] arguments = command.Split(' ');
                         string cmd = $"venv/bin/python viever.py get_table_columns {databaseName}.db {arguments[1]}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
@@ -387,11 +412,10 @@ class MainAppWindow : Window
                     {
                         string[] arguments = command.Split(' ');
                         string cmd = $"venv/bin/python viever.py get_table_data {databaseName}.db {arguments[1]}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
-
                     
                     if (command.Contains("check_connectivity"))
                     {
@@ -401,10 +425,11 @@ class MainAppWindow : Window
                             ar += arguments[i] + " ";
                         
                         string cmd = $"venv/bin/python migrate.py check_connectivity {ar}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
+                    
                     if (command.Contains("transfer_data"))
                     {
                         string ar = "";
@@ -412,10 +437,11 @@ class MainAppWindow : Window
                         for (int i = 2; i < arguments.Length; ++i)
                             ar += arguments[i] + " ";
                         string cmd = $"venv/bin/python migrate.py transfer_data {ar}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }
+                    
                     if (command.Contains("auto_transfer_data"))
                     {
                         string ar = "";
@@ -423,7 +449,7 @@ class MainAppWindow : Window
                         for (int i = 2; i < arguments.Length; ++i)
                             ar += arguments[i] + " ";
                         string cmd = $"venv/bin/python migrate.py auto_transfer_data {ar}";
-                        string output = Globals.RunCommandWithBash(cmd);
+                        string output = Globals.RunCommandWithSocket(cmd);
                         textView.Buffer.Text = "";
                         textView.Buffer.Text += output + "\n";
                     }                   

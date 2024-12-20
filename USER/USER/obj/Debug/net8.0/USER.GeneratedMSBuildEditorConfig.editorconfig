@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = USER
-build_property.ProjectDir = /home/egorskab/RiderProjects/mix/USER/USER/
+build_property.ProjectDir = /home/stryboh/Projects/Proga/USER/USER/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

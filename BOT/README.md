@@ -1,11 +1,9 @@
-# python -m venv venv
+python -m venv venv
 
-# source venv/bin/activate
+source venv/bin/activate
 
-# pip install iogram
+pip install aiogram
 
-# pip install asyncio
+pip install asyncio
 
-# pip install sqlite3
-
-# python main.py
+pip install sqlite3
